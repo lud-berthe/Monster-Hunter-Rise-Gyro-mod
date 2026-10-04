@@ -1,0 +1,84 @@
+MONSTER HUNTER RISE GYRO MOD 1.0.0
+
+INSTALL
+Close Rise. Install REFramework for Rise, then download gyrolib.dll from
+GyroLib 1.0.0 and place it beside MonsterHunterRise.exe:
+https://github.com/lud-berthe/GyroLib/releases/tag/v1.0.0
+https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9
+
+Extract this mod archive beside MonsterHunterRise.exe.
+Back up existing mod files before replacing them.
+This archive includes no gyrolib.dll, INI file or REFramework runtime.
+Its reframework/ directory contains only this mod's plugin, scripts and notices.
+Microsoft Visual C++ x64 Runtime is required. Use DirectX 12 with HDR off.
+
+STEAM INPUT
+Set the RIGHT TOUCHPAD to None before enabling touchpad flick.
+GyroLib reads the physical touchpad even when Steam Input sends no output.
+Disable Steam Input gyro-to-mouse/joystick output to avoid double movement.
+The mod does not change or automatically detect your Steam Input layout.
+Other buttons and the movement stick can retain their normal assignments.
+
+CONTROLS
+F10: gyro settings. Close REFramework with Insert if its panel is open.
+F9: record a 30-second diagnostic; press again to stop early.
+
+F10 > Use recommended settings restores the mod author's preset:
+gyro Off in Free camera and Menu camera, Always on in the four aiming views,
+sensitivity X/Y 2.5, Player space, no inversion, smoothing, acceleration or flick.
+This preset is also used on first installation. Existing settings are preserved
+when updating. Applying the preset keeps your language and menu shortcut.
+
+VIEWS
+Free camera - Look around without aiming.
+Menu camera - Move the camera while a menu is open.
+Wirebug aim - Aim the Wirebug.
+Weapon aim - Aim with any weapon.
+Ballista - Aim the ballista.
+Cannon - Aim the cannon.
+
+Each view has separate settings. Selecting a tab edits it; the game selects
+the active view automatically. Enable Flick in each desired view and choose
+Stick, Touchpad or Stick + Touchpad. Available choices depend on your device.
+Touchpad-only flick preserves the normal right stick and the real mouse.
+To disable gyro behind menus, set Menu camera's activation mode to Off.
+Choose a Recenter button to level the camera's pitch.
+Block long press has an experimental standard-gamepad filter (Hold modes).
+It preserves aim, native holds and menu actions. Custom Steam Input remaps
+and extra physical buttons are not covered yet. Live validation is pending.
+F10 now also captures the game's resolved inputs; release held buttons after closing.
+
+VALIDATION
+- Both gyro axes in all six views, including ballista scope and cannon.
+- Flick angles: right/left about 90 degrees, back about 180 degrees.
+- Holding still after a flick should add no rotation.
+- Touchpad-only and combined modes, and mouse-look with flick enabled.
+- Recenter, including siege weapons; this part still needs live validation.
+
+Live testing uses a Steam Controller 2026 through its puck. Other controller
+models are unverified. This is an experimental mod; version 1.0.0 does not imply validation of every setup.
+
+REPORTING
+Press F9, reproduce the problem with both settings panels closed, then wait
+30 seconds. Report the behavior, controller model/connection, view and input
+used, together with:
+  reframework/data/mhr_gyro_state_probe.json
+  reframework/data/mhr_gyro_reader_probe.json
+  re2_framework_log.txt
+
+SETTINGS / REMOVAL
+Settings are saved in reframework/data/gyrolib.ini and are not included here.
+This build uses GyroLib 1.0.0 (schema=0.2.0). Earlier integer development
+schemas are not loaded automatically. Keep a backup before updating an old
+test installation; its settings need a verified conversion to this format.
+The archive contains no saves, personal configuration or recorded reports.
+The recommended preset is embedded in the plugin and restored through GyroLib.
+To remove the mod, close Rise and remove reframework/plugins/MHRGyro.dll,
+reframework/autorun/mhr_gyro.lua, reframework/autorun/mhr_gyro/ and
+reframework/MHRGyro/. Keep gyrolib.ini to retain your preferences.
+Remove external dependencies only if no other mod uses them.
+
+Tested REFramework (installed separately): nightly 01424, revision
+d1461375aee4ec3f313170f8eaad12064eb542d9
+https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9
+Dependency notices: reframework/MHRGyro/licenses/
