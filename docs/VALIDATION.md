@@ -4,7 +4,7 @@
 
 GyroLib 1.0.0, Windows x64 Release: **8/8 CTests pass with SDL enabled and 8/8 with SDL disabled**. The embedded preset was independently compared with the original author INI: all 277 numeric values match. Tests cover a fresh installation without any INI or data directory, preservation of existing preferences, native recommended-settings restoration and script resets.
 
-The verified release ZIP contains 31 files: this mod's DLL and Lua scripts, installation instructions and dependency notices. Its only DLL is `reframework/plugins/MHRGyro.dll`; there is no INI, GyroLib runtime, REFramework runtime, personal report or debug symbol. GyroLib and REFramework must be installed separately. The original author preset and all local build/research artifacts stay outside the published source tree.
+The minimal release ZIP contains **three files**: this mod's unchanged DLL, one Lua script bundling the original modules, and consolidated license notices. The earlier 31-file package has been replaced. A new regression executes the bundled script and loads all its modules with disk module search disabled, including native-GUI callbacks and a second load. Its only DLL is `reframework/plugins/MHRGyro.dll`; there is no INI, GyroLib runtime, REFramework runtime, personal report or debug symbol. GyroLib and REFramework must be installed separately. The original author preset and all local build/research artifacts stay outside the published source tree.
 
 The live-validation limits below remain applicable to this release.
 

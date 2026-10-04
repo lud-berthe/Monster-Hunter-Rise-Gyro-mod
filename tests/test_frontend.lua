@@ -36,7 +36,7 @@ package.loaded["mhr_gyro/profile"]={verified=false,contexts={},
     install=function(tick) re.on_frame(tick) end}
 
 package.loaded["mhr_gyro/inspect"]=nil
-dofile(root.."/reframework/autorun/mhr_gyro.lua")
+dofile(frontend_entry or root.."/reframework/autorun/mhr_gyro.lua")
 -- Remove autorun from module search, as the real script runner does.
 package.path,package.cpath="",""
 for _=1,35 do
@@ -76,7 +76,7 @@ imgui.button=function(label)
 end
 package.path,package.cpath=old_path,old_cpath
 key_down,camera_key,inspect_clicked=true,false,false
-dofile(root.."/reframework/autorun/mhr_gyro.lua")
+dofile(frontend_entry or root.."/reframework/autorun/mhr_gyro.lua")
 package.path,package.cpath="",""
 for _,callback in ipairs(callbacks) do callback() end
 assert(native_ui and open_calls==0,"Lua F10 must not toggle the SDK GUI")

@@ -14,17 +14,15 @@ $sdkNotices=$inputs[2]
 $reframeworkSource=$inputs[3]
 $runtime=Join-Path (Split-Path -Parent $plugin) 'gyrolib.dll'
 $required=@($plugin, $sdkRuntime, $runtime,
-    (Join-Path $projectRoot 'README.md'), (Join-Path $projectRoot 'LICENSE'),
+    (Join-Path $projectRoot 'LICENSE'),
     (Join-Path $reframeworkSource 'LICENSE'),
     (Join-Path $reframeworkSource 'dependencies/lua/src/lua.h'),
-    (Join-Path $sdkNotices 'THIRD_PARTY.md'))
+    (Join-Path $sdkNotices 'licenses/LICENSE'))
 foreach ($path in $required) {
     if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing package input: $path" }
 }
-foreach ($path in @((Join-Path $projectRoot 'reframework/autorun'),
-        (Join-Path $projectRoot 'docs'), (Join-Path $sdkNotices 'licenses'),
-        (Join-Path $sdkNotices 'sdl-changes'))) {
-    if (!(Test-Path -LiteralPath $path -PathType Container)) { throw "Missing package input directory: $path" }
+if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'reframework/autorun') -PathType Container)) {
+    throw 'Missing Lua source directory.'
 }
 if ((Get-FileHash -LiteralPath $runtime -Algorithm SHA256).Hash -ne
         (Get-FileHash -LiteralPath $sdkRuntime -Algorithm SHA256).Hash) {
@@ -56,15 +54,13 @@ if (Test-Path -LiteralPath $stage) {
     Remove-Item -LiteralPath $stage -Recurse -Force
 }
 New-Item -ItemType Directory -Force (Join-Path $stage 'reframework/plugins'),
-    (Join-Path $stage 'licenses/GyroLib') | Out-Null
+    (Join-Path $stage 'licenses') | Out-Null
 Copy-Item -LiteralPath $plugin -Destination (Join-Path $stage 'reframework/plugins/MHRGyro.dll')
 Copy-Item -LiteralPath (Join-Path $projectRoot 'reframework/autorun') -Destination (Join-Path $stage 'reframework') -Recurse
-Copy-Item -LiteralPath (Join-Path $projectRoot 'README.md') -Destination $stage
-Copy-Item -LiteralPath (Join-Path $projectRoot 'docs') -Destination $stage -Recurse
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $stage 'licenses/MHRGyro.txt')
 Copy-Item -LiteralPath (Join-Path $reframeworkSource 'LICENSE') -Destination (Join-Path $stage 'licenses/REFramework.txt')
-$lua.Substring($start) | Set-Content -LiteralPath (Join-Path $stage 'licenses/Lua.txt')
-foreach ($entry in @('licenses', 'sdl-changes', 'THIRD_PARTY.md')) {
-    Copy-Item -LiteralPath (Join-Path $sdkNotices $entry) -Destination (Join-Path $stage 'licenses/GyroLib') -Recurse
-}
+$end=$lua.IndexOf('*/', $start)
+if ($end -lt 0) { throw 'Lua license terminator not found.' }
+$lua.Substring($start, $end+2-$start) | Set-Content -LiteralPath (Join-Path $stage 'licenses/Lua.txt') -Encoding utf8
+Copy-Item -LiteralPath (Join-Path $sdkNotices 'licenses/LICENSE') -Destination (Join-Path $stage 'licenses/GyroLib.txt')
 Write-Output "Staged mod-only package: $stage. No game files were modified."

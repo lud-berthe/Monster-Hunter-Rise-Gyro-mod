@@ -6,9 +6,26 @@ extern "C" {
 }
 #include <cstdio>
 int main(int argc,char** argv) {
-    if(argc!=2) return 2;
+    if(argc!=2 && argc!=3) return 2;
     lua_State* l=luaL_newstate(); luaL_openlibs(l); mhr_register(l);
     lua_pushstring(l,argv[1]); lua_setglobal(l,"root");
+    if(argc==3) {
+        lua_pushstring(l,argv[2]);lua_setglobal(l,"frontend_entry");
+        const int error=luaL_dostring(l,R"(
+            package.path,package.cpath="",""
+            dofile(root..'/tests/test_frontend.lua')
+            -- Test the real profile and every bundled module as well as the
+            -- frontend's synthetic diagnostic profile, with no disk search.
+            package.loaded['mhr_gyro/profile']=nil
+            local profile=require('mhr_gyro/profile')
+            assert(profile.verified and #profile.contexts==6)
+            for name in pairs(package.preload) do
+                if name:match('^mhr_gyro/') then assert(type(require(name))=='table') end
+            end
+        )");
+        if(error)std::fprintf(stderr,"%s\n",lua_tostring(l,-1));
+        lua_close(l);return error?1:0;
+    }
     const char* script=R"(
       package.path=root.."/reframework/autorun/?.lua;"..package.path
       local OK,INVALID,UNAVAILABLE=0,-1,-2

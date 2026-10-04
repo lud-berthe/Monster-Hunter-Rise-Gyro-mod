@@ -1,29 +1,51 @@
 """Package a staged build; personal settings and reports are never included."""
 import argparse
 import hashlib
+import re
 from pathlib import Path
 import zipfile
 
-def package(stage, output, readme):
-    entries = {
-        "reframework/plugins/MHRGyro.dll": (stage / "reframework/plugins/MHRGyro.dll").read_bytes(),
-        "README_MHRGyro.txt": readme.read_bytes(),
-    }
-    scripts = stage / "reframework/autorun"
-    licenses = stage / "licenses"
-    for needed in [scripts / "mhr_gyro.lua", licenses / "MHRGyro.txt",
-                   licenses / "REFramework.txt", licenses / "Lua.txt", licenses / "GyroLib/THIRD_PARTY.md"]:
-        if not needed.is_file():
-            raise ValueError(f"Missing package input: {needed}")
-    entries["reframework/autorun/mhr_gyro.lua"] = (scripts / "mhr_gyro.lua").read_bytes()
-    modules = list((scripts / "mhr_gyro").glob("*.lua"))
+def bundle_scripts(scripts):
+    modules = sorted((scripts / "mhr_gyro").glob("*.lua"))
     if not modules:
         raise ValueError("Missing Lua modules")
+    chunks = [b"-- Generated from the MHRGyro Lua sources; edit the repository sources.\n"]
+    names = set()
+    sources = []
     for file in modules:
-        entries[file.relative_to(stage).as_posix()] = file.read_bytes()
-    for file in licenses.rglob("*"):
-        if file.is_file():
-            entries["reframework/MHRGyro/licenses/" + file.relative_to(licenses).as_posix()] = file.read_bytes()
+        if not re.fullmatch(r"[a-z_][a-z0-9_]*", file.stem):
+            raise ValueError(f"Invalid module name: {file.name}")
+        name = "mhr_gyro/" + file.stem
+        names.add(name)
+        source = file.read_text(encoding="utf-8-sig")
+        sources.append(source)
+        chunks.append((f'package.preload["{name}"] = function(...)\n' + source + "\nend\n").encode("utf-8"))
+    entry = (scripts / "mhr_gyro.lua").read_text(encoding="utf-8-sig")
+    sources.append(entry)
+    for source in sources:
+        for name in re.findall(r"require\s*\(\s*[\"'](mhr_gyro/[^\"']+)[\"']", source):
+            if name not in names:
+                raise ValueError(f"Missing Lua dependency: {name}")
+    chunks.append(entry.encode("utf-8"))
+    return b"\n".join(chunks)
+
+
+def package(stage, output):
+    scripts = stage / "reframework/autorun"
+    licenses = stage / "licenses"
+    license_names = ["MHRGyro", "REFramework", "Lua", "GyroLib"]
+    for needed in [scripts / "mhr_gyro.lua", *(licenses / (name + ".txt") for name in license_names)]:
+        if not needed.is_file():
+            raise ValueError(f"Missing package input: {needed}")
+    notices = "MHRGyro - bundled code and header licenses\n"
+    for name in license_names:
+        notices += "\n" + "=" * 72 + "\n" + name + "\n" + "=" * 72 + "\n\n"
+        notices += (licenses / (name + ".txt")).read_text(encoding="utf-8-sig").strip() + "\n"
+    entries = {
+        "reframework/plugins/MHRGyro.dll": (stage / "reframework/plugins/MHRGyro.dll").read_bytes(),
+        "reframework/autorun/mhr_gyro.lua": bundle_scripts(scripts),
+        "reframework/MHRGyro/LICENSES.txt": notices.encode("utf-8"),
+    }
     if any(Path(path).suffix.lower() in {".ini", ".json", ".log", ".pdb"} for path in entries):
         raise ValueError("Unexpected private or debug file in package")
     if any(Path(path).suffix.lower() == ".dll" and path != "reframework/plugins/MHRGyro.dll" for path in entries):
@@ -51,7 +73,7 @@ def main():
         parser.error("Provide a ZIP filename without a directory")
     output = root / "dist" / args.name
     output.parent.mkdir(exist_ok=True)
-    count = package(args.stage, output, root / "docs/INSTALL.txt")
+    count = package(args.stage, output)
     print(f"{output}\n{count} entries, {output.stat().st_size / 1024**2:.2f} MiB")
     print("SHA256:", hashlib.sha256(output.read_bytes()).hexdigest())
 

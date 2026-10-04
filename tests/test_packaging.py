@@ -32,15 +32,16 @@ class Distribution(unittest.TestCase):
         for path in ["reframework/plugins/MHRGyro.dll",
                      "reframework/autorun/mhr_gyro.lua", "reframework/autorun/mhr_gyro/profile.lua",
                      "licenses/MHRGyro.txt", "licenses/REFramework.txt", "licenses/Lua.txt",
-                     "licenses/GyroLib/THIRD_PARTY.md", "licenses/GyroLib/licenses/notice.txt"]:
+                     "licenses/GyroLib.txt"]:
             write(stage, path)
         for path in ["gyrolib.dll", "dinput8.dll", "reframework/data/mhr_gyro_recommended.ini", "reframework/data/gyrolib.ini", "reframework/data/girolib.ini", "reframework/data/report.json",
-                     "reframework/autorun/unrelated.lua", "debug.pdb"]:
+                     "reframework/autorun/unrelated.lua", "licenses/GyroLib/sdl-changes/unused.patch", "debug.pdb"]:
             write(stage, path, "private")
         output = self.root / "mod.zip"
-        readme = write(self.root, "README.txt")
-        packaging.package(stage, output, readme)
+        packaging.package(stage, output)
         with zipfile.ZipFile(output) as archive:
+            self.assertEqual(set(archive.namelist()), {"reframework/plugins/MHRGyro.dll",
+                "reframework/autorun/mhr_gyro.lua", "reframework/MHRGyro/LICENSES.txt"})
             self.assertNotIn("dinput8.dll", archive.namelist())
             self.assertNotIn("gyrolib.dll", archive.namelist())
             self.assertFalse(any(Path(name).suffix.lower() == ".ini" for name in archive.namelist()))
@@ -48,11 +49,26 @@ class Distribution(unittest.TestCase):
             self.assertFalse(any(b"private" in archive.read(name) for name in archive.namelist()))
         before = output.read_bytes()
         with self.assertRaises(FileExistsError):
-            packaging.package(stage, output, readme)
+            packaging.package(stage, output)
         self.assertEqual(output.read_bytes(), before)
         (stage / "licenses/Lua.txt").unlink()
         with self.assertRaisesRegex(ValueError, "Missing package input"):
-            packaging.package(stage, self.root / "missing.zip", readme)
+            packaging.package(stage, self.root / "missing.zip")
+
+    def test_bundle_requires_all_referenced_modules(self):
+        scripts = self.root / "scripts"
+        write(scripts, "mhr_gyro.lua", 'require("mhr_gyro/missing")')
+        write(scripts, "mhr_gyro/profile.lua", "return {}")
+        with self.assertRaisesRegex(ValueError, "Missing Lua dependency"):
+            packaging.bundle_scripts(scripts)
+
+    @unittest.skipUnless(os.environ.get("MHR_TEST_RUNNER"), "Requires the built Lua fixture")
+    def test_real_bundle_runs_without_module_files(self):
+        entry = self.root / "mhr_gyro.lua"
+        entry.write_bytes(packaging.bundle_scripts(ROOT / "reframework/autorun"))
+        result = subprocess.run([os.environ["MHR_TEST_RUNNER"], str(ROOT), str(entry)],
+            capture_output=True, text=True, timeout=30, cwd=self.root)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     @unittest.skipUnless(os.name == "nt", "Windows installer")
     def test_installer_first_install_update_conflict_and_dll_mismatch(self):

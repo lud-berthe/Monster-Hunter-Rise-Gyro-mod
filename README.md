@@ -21,7 +21,7 @@ This is an experimental mod. The tested setup is Steam Controller 2026 through i
 5. For **touchpad flick**, set Steam Input's right touchpad to **None**. The mod reads the physical touchpad through GyroLib; it does not inspect or change your Steam layout.
 6. Launch Rise, load a save and press F10. Close REFramework's own panel with Insert if necessary.
 
-The release contains **only the mod**: `reframework/plugins/MHRGyro.dll`, `reframework/autorun/mhr_gyro.lua`, its `mhr_gyro/` modules, installation instructions and license notices. It contains **no GyroLib DLL, INI file or REFramework runtime**. The `reframework/` directory is the required installation location for the mod's own files.
+The release contains exactly **three files**: `reframework/plugins/MHRGyro.dll`, the bundled `reframework/autorun/mhr_gyro.lua` script and `reframework/MHRGyro/LICENSES.txt`. All Lua modules are included in that one script; installation instructions stay on this page. It contains **no GyroLib DLL, INI file or REFramework runtime**. The `reframework/` directory is the required installation location for the mod's own files.
 
 ## Settings
 
@@ -50,7 +50,7 @@ python ./tools/package.py Monster-Hunter-Rise-Gyro-mod-1.0.0.zip
 
 `-DMHR_WITH_SDL=OFF` tests the bridge without SDL acquisition. CTests use synthetic input and a hidden DirectX 12 WARP window, never the game or a real controller. Python 3.10+ enables the additional packaging/installer tests. DLL-only SDK changes are copied on the next build even without relinking.
 
-Staging creates `dist/MHRGyro`; packaging creates a new mod-only ZIP in `dist` and refuses to overwrite an existing archive. Neither step bundles external runtimes or INI files. Source checkouts contain no game binaries or dependency downloads.
+Staging creates `dist/MHRGyro`; packaging creates a new mod-only ZIP in `dist` and refuses to overwrite an existing archive. Packaging combines the source modules through Lua's standard `package.preload` mechanism and consolidates the applicable licenses. Neither step bundles external runtimes or INI files. Source checkouts contain no game binaries or dependency downloads.
 
 For a local installation from a build:
 
@@ -69,4 +69,4 @@ The installer records hashes under `reframework/MHRGyro/install-manifest.json`. 
 
 Include the game/REFramework version, controller and connection, active view, relevant settings, and steps to reproduce a bug. Useful local reports are `mhr_gyro_state_probe.json`, `mhr_gyro_reader_probe.json` and `re2_framework_log.txt`.
 
-To uninstall, close Rise and remove the mod files listed above. Keep `gyrolib.ini` if you want your preferences for a later reinstall. Remove REFramework's `dinput8.dll` only if no other mod uses it. This project is not affiliated with Capcom. See [LICENSE](LICENSE) and the packaged dependency notices.
+To uninstall, close Rise and remove the three mod files listed above. Older packages also installed `reframework/autorun/mhr_gyro/`, `reframework/MHRGyro/licenses/` and `README_MHRGyro.txt`; these can be removed when updating to the bundled release. Keep `gyrolib.ini` if you want your preferences for a later reinstall. Remove REFramework's `dinput8.dll` only if no other mod uses it. This project is not affiliated with Capcom. See [LICENSE](LICENSE) and the packaged dependency notices.

@@ -9,7 +9,8 @@ https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d14613
 Extract this mod archive beside MonsterHunterRise.exe.
 Back up existing mod files before replacing them.
 This archive includes no gyrolib.dll, INI file or REFramework runtime.
-Its reframework/ directory contains only this mod's plugin, scripts and notices.
+The ZIP contains three files: the mod DLL, one bundled Lua script and LICENSES.txt.
+Installation instructions are kept on GitHub, outside the minimal archive.
 Microsoft Visual C++ x64 Runtime is required. Use DirectX 12 with HDR off.
 
 STEAM INPUT
@@ -74,11 +75,13 @@ test installation; its settings need a verified conversion to this format.
 The archive contains no saves, personal configuration or recorded reports.
 The recommended preset is embedded in the plugin and restored through GyroLib.
 To remove the mod, close Rise and remove reframework/plugins/MHRGyro.dll,
-reframework/autorun/mhr_gyro.lua, reframework/autorun/mhr_gyro/ and
-reframework/MHRGyro/. Keep gyrolib.ini to retain your preferences.
+reframework/autorun/mhr_gyro.lua and reframework/MHRGyro/LICENSES.txt.
+Old installations may also have reframework/autorun/mhr_gyro/,
+reframework/MHRGyro/licenses/ and README_MHRGyro.txt; these are no longer needed
+by the bundled release. Keep gyrolib.ini to retain your preferences.
 Remove external dependencies only if no other mod uses them.
 
 Tested REFramework (installed separately): nightly 01424, revision
 d1461375aee4ec3f313170f8eaad12064eb542d9
 https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9
-Dependency notices: reframework/MHRGyro/licenses/
+Dependency notices: reframework/MHRGyro/LICENSES.txt
