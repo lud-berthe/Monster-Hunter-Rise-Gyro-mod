@@ -21,3 +21,4 @@ uint32_t mhr_gui_capture();
 void mhr_gui_close();
 int mhr_gui_state(lua_State*);
 int mhr_gui_set_open(lua_State*);
+int mhr_gui_report_color_space(lua_State*);

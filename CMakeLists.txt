@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
-project(MHRGyro VERSION 1.0.0 LANGUAGES C CXX)
+project(MHRGyro VERSION 1.0.1 LANGUAGES C CXX)
 if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "MHRGyro requires a Windows x64 toolchain.")
 endif()
 include(CTest)
-set(GYROLIB_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../GyroLib/dist/sdk" CACHE PATH "Installed GyroLib 1.0 SDK (read-only)")
+set(GYROLIB_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../GyroLib/dist/sdk" CACHE PATH "Installed GyroLib 1.1 SDK (read-only)")
 get_filename_component(GYROLIB_SDK_DIR "${GYROLIB_SDK_DIR}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(REFRAMEWORK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/REFramework" CACHE PATH "Pinned official REFramework source")
 option(MHR_WITH_SDL "Include the GyroLib SDL reader" ON)
@@ -15,11 +15,11 @@ set(GyroLib_DIR "${GYROLIB_SDK_DIR}/lib/cmake/GyroLib")
 if(NOT EXISTS "${GyroLib_DIR}/GyroLibConfig.cmake")
   message(FATAL_ERROR
     "Installed GyroLib SDK not found at ${GYROLIB_SDK_DIR}. "
-    "Set -DGYROLIB_SDK_DIR=<installed-sdk-prefix> to a GyroLib 1.0 SDK. "
+    "Set -DGYROLIB_SDK_DIR=<installed-sdk-prefix> to a GyroLib 1.1 SDK. "
     "This project consumes the SDK without building or modifying GyroLib.")
 endif()
 # The bridge calls only GyroLib's C acquisition API; the bundled runtime owns SDL.
-find_package(GyroLib 1.0 CONFIG REQUIRED COMPONENTS Core Overlay Steam)
+find_package(GyroLib 1.1 CONFIG REQUIRED COMPONENTS Core Overlay Steam)
 get_target_property(_gyrolib_type GyroLib::gyrolib TYPE)
 if(MHR_WITH_SDL)
   get_target_property(_gyrolib_definitions GyroLib::gyrolib INTERFACE_COMPILE_DEFINITIONS)

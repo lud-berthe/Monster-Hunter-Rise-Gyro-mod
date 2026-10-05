@@ -32,7 +32,7 @@ Script GC detaches the backend with permissions, commands and deltas cleared. A 
 
 The mod polls SDL, polls GyroLib's borrowed Steam reader, commits overlay commands once and then calls `gl_update`. GyroLib publishes its own completed-frame snapshot. The MHR-specific Steam session helper attempts public `SteamInput::Init(false)` once if the game's observed v005 interface reports no controllers. It never calls SteamAPI_Init, RunFrame, Shutdown or changes layouts/action sets.
 
-The native overlay requires DX12 SDR. A dedicated render worker owns its init/render/shutdown operations; Present and resize callbacks wait for completion. Owner-thread overlay detach precedes context destruction; GPU resources are retained after a live-device timeout for safe retry. The SDK owns its shortcut, controls and controller navigation. Lifecycle window messages and Alt+F4 remain available.
+The native overlay requires DX12 and GyroLib 1.1 or later. The Lua adapter reads RenderConfig color space without changing game settings. It reports known SDR/HDR10 encoding to the overlay; unknown values use automatic detection. This avoids interpreting an SDR 10-bit buffer as PQ merely because the desktop uses HDR. FP16 buffers use scRGB. A color-space change reinitializes the overlay on its render thread. A dedicated render worker owns its init/render/shutdown operations; Present and resize callbacks wait for completion. Owner-thread overlay detach precedes context destruction; GPU resources are retained after a live-device timeout for safe retry. The SDK owns its shortcut, controls and controller navigation. Lifecycle window messages and Alt+F4 remain available.
 
 ## Persistence and SDK boundary
 

@@ -15,6 +15,7 @@ extern "C" {
 #include <vector>
 #include <filesystem>
 #include <cstdio>
+#include <cstdarg>
 #include <cstring>
 #include <stdexcept>
 using Microsoft::WRL::ComPtr;
@@ -64,7 +65,7 @@ struct Graphics {
 
 int main()try{
     SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX);
-    Graphics g; mhr_gui_enable();
+    Graphics g; mhr_gui_enable(+[](const char* fmt,...){va_list args;va_start(args,fmt);vfprintf(stderr,fmt,args);va_end(args);fputc('\n',stderr);});
     auto* c=gl_create(GL_ABI_VERSION);CHECK(c);
     const gl_gameplay_context view{1,"Caméra normale","Normal camera integration",0};
     CHECK(gl_register_gameplay_context(c,&view)==GL_OK);
@@ -136,6 +137,27 @@ int main()try{
     mhr_gui_message(g.window,WM_KEYDOWN,VK_F10,0);frame();CHECK(!gl_panel_open(c));
     lua_pushboolean(l,1);mhr_gui_set_open(l);CHECK(lua_tointeger(l,-1)==GL_OK);lua_settop(l,0);
     frame();CHECK(gl_panel_open(c));mhr_gui_close();frame();CHECK(!gl_panel_open(c));
+    // AUTO is available until an explicit engine color-space observation arrives.
+    for(auto format:{DXGI_FORMAT_R10G10B10A2_UNORM,DXGI_FORMAT_R16G16B16A16_FLOAT}){
+        CHECK(mhr_gui_reset());g.drain();
+        CHECK(SUCCEEDED(g.swap->ResizeBuffers(2,800,600,format,0)));
+        frame();
+        mhr_gui_state(l);lua_getfield(l,-1,"ready");CHECK(lua_toboolean(l,-1));lua_settop(l,0);
+        lua_pushboolean(l,1);mhr_gui_set_open(l);CHECK(lua_tointeger(l,-1)==GL_OK);lua_settop(l,0);
+        frame();frame();CHECK(gl_panel_open(c));
+        if(format==DXGI_FORMAT_R10G10B10A2_UNORM){
+            // Same 10-bit swapchain on an HDR desktop can contain SDR or PQ.
+            for(int color:{0,12,0}){
+                lua_pushinteger(l,color);mhr_gui_report_color_space(l);lua_settop(l,0);frame();frame();
+                mhr_gui_state(l);lua_getfield(l,-1,"ready");CHECK(lua_toboolean(l,-1));lua_settop(l,0);
+                CHECK(gl_panel_open(c));
+            }
+        }
+    }
+    CHECK(mhr_gui_reset());g.drain();
+    CHECK(SUCCEEDED(g.swap->ResizeBuffers(2,800,600,DXGI_FORMAT_R8G8B8A8_UNORM,0)));
+    frame();
+    mhr_gui_state(l);lua_getfield(l,-1,"ready");CHECK(lua_toboolean(l,-1));lua_settop(l,0);
     CHECK(mhr_gui_detach(gui));gl_destroy(c); // Context may die before renderer cleanup.
     CHECK(mhr_gui_capture()==0);CHECK(mhr_gui_reset());gui.reset();lua_close(l);
     std::filesystem::remove(settings);

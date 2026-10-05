@@ -1,5 +1,15 @@
 # Validation and audit
 
+## Release 1.0.1 — 5 October 2026
+
+Fresh Windows x64 Release builds against the installed GyroLib 1.1.0 SDK pass **8/8 CTests with SDL enabled and 8/8 with SDL disabled**. This includes packaging, the bundled Lua script and hidden DX12 GUI checks.
+
+Requires GyroLib 1.1.0 or later. The settings overlay accepts SDR 10-bit, scRGB and HDR10 buffers. The adapter reports the game's observed color space and falls back to automatic detection when unavailable.
+
+With native HDR enabled in the game, the user confirmed that F10 opens the panel and that its colors are normal. The observed buffer was R10G10B10A2 with reported DXGI color space 0 (SDR), on a Windows HDR desktop. Treating that buffer as PQ had desaturated the panel. This session does not validate native PQ/scRGB presentation on a physical display.
+
+The GUI regression covers automatic detection and explicit SDR/HDR10 changes on the same 10-bit format, FP16 buffers, panel lifecycle and return to SDR. GyroLib separately tests HDR composition through WARP pixel readback.
+
 ## Release 1.0.0 - 4 October 2026
 
 GyroLib 1.0.0, Windows x64 Release: **8/8 CTests pass with SDL enabled and 8/8 with SDL disabled**. The embedded preset was independently compared with the original author INI: all 277 numeric values match. Tests cover a fresh installation without any INI or data directory, preservation of existing preferences, native recommended-settings restoration and script resets.
@@ -7,10 +17,6 @@ GyroLib 1.0.0, Windows x64 Release: **8/8 CTests pass with SDL enabled and 8/8 w
 The minimal release ZIP contains **three files**: this mod's unchanged DLL, one Lua script bundling the original modules, and consolidated license notices. The earlier 31-file package has been replaced. A new regression executes the bundled script and loads all its modules with disk module search disabled, including native-GUI callbacks and a second load. Its only DLL is `reframework/plugins/MHRGyro.dll`; there is no INI, GyroLib runtime, REFramework runtime, personal report or debug symbol. GyroLib and REFramework must be installed separately. The original author preset and all local build/research artifacts stay outside the published source tree.
 
 The live-validation limits below remain applicable to this release.
-
-## SDK update — GyroLib 1.0.0, 4 October 2026
-
-The mod now requires the GyroLib 1.0 SDK; the C/overlay ABI remains 1 and the settings schema remains 0.2.0. The Release build passes 8/8 CTests with the new runtime. The corrected default filename is `gyrolib.ini`. During the local update, all 277 saved numeric preferences were read back through the new SDK and compared before renaming the existing `girolib.ini`; its bytes were preserved and the original was backed up outside the source tree. This is an installation rename, not a custom settings loader or a modification to GyroLib. Earlier deployments should rename their old file with the game closed, without overwriting an existing `gyrolib.ini`.
 
 ## Automated audit — 4 October 2026
 
@@ -48,6 +54,6 @@ Test setup: Steam Controller 2026 through its puck, Windows, DX12 SDR, Steam bui
 - Block long press for real commands; arbitrary Steam remaps and extra buttons are not universally supported by the current adapter.
 - Controller-selected recenter, especially siege weapons; final subjective flick/touchpad angle and direction checks.
 - Reconnect, sleep, calibration and haptic coexistence across other hardware/transports.
-- Other game versions, HDR, Linux/Proton and coexistence with other camera mods. HDR is unsupported by this overlay backend.
+- Other game versions, Linux/Proton and coexistence with other camera mods. Native PQ/scRGB output on physical displays and other HDR display configurations remain unvalidated.
 
 The audit uses synthetic tests and a hidden graphics window. It does not silently mark these live checks as completed. Detailed historical experiments and private runtime captures are retained in the local archive, outside the publishable source tree.

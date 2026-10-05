@@ -10,14 +10,14 @@ A Windows x64 REFramework mod that adds native gyro camera control to Monster Hu
 - GyroLib's native DirectX 12 settings overlay, with game-input capture while open.
 - SDL motion acquisition with Steam Input fallback, on the game window thread.
 
-This is an experimental mod. The tested setup is Steam Controller 2026 through its puck, Windows, DirectX 12 and HDR disabled. See [validation and limits](docs/VALIDATION.md) before assuming support for other setups.
+This is an experimental mod. The tested setup is Steam Controller 2026 through its puck, Windows, DirectX 12, with panel opening and colors also checked with native HDR enabled. See [validation and limits](docs/VALIDATION.md) before assuming support for other setups.
 
 ## Install
 
 1. Close Rise and install [REFramework for Rise](https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9). The tested runtime is nightly 01424, plugin API 1.15.0. The Microsoft Visual C++ x64 runtime is required.
-2. Download **`gyrolib.dll`** from [GyroLib 1.0.0](https://github.com/lud-berthe/GyroLib/releases/tag/v1.0.0) and put it beside `MonsterHunterRise.exe`.
-3. Extract **`Monster-Hunter-Rise-Gyro-mod-1.0.0.zip`** from [Releases](https://github.com/lud-berthe/Monster-Hunter-Rise-Gyro-mod/releases) beside `MonsterHunterRise.exe`. Back up any existing mod files first.
-4. Use DirectX 12 with HDR off. Disable Steam Input gyro-to-mouse/joystick output to avoid duplicate rotation.
+2. Download **`gyrolib.dll`** from [GyroLib 1.1.0](https://github.com/lud-berthe/GyroLib/releases/tag/v1.1.0) and put it beside `MonsterHunterRise.exe`.
+3. Extract **`Monster-Hunter-Rise-Gyro-mod-1.0.1.zip`** from [Releases](https://github.com/lud-berthe/Monster-Hunter-Rise-Gyro-mod/releases) beside `MonsterHunterRise.exe`. Back up any existing mod files first.
+4. Use DirectX 12. Disable Steam Input gyro-to-mouse/joystick output to avoid duplicate rotation.
 5. For **touchpad flick**, set Steam Input's right touchpad to **None**. The mod reads the physical touchpad through GyroLib; it does not inspect or change your Steam layout.
 6. Launch Rise, load a save and press F10. Close REFramework's own panel with Insert if necessary.
 
@@ -25,7 +25,7 @@ The release contains exactly **three files**: `reframework/plugins/MHRGyro.dll`,
 
 ## Settings
 
-Selecting a settings tab edits that view without changing the active game view. Settings save automatically to **`reframework/data/gyrolib.ini`**. Your file is never included in packages or replaced by the installer. The configured GyroLib menu shortcut takes precedence over F10. Earlier builds used the misspelled `girolib.ini`: with Rise closed, rename that file to `gyrolib.ini` if the new file does not already exist. Keep a backup and do not overwrite an existing newer configuration.
+Selecting a settings tab edits that view without changing the active game view. Settings save automatically to **`reframework/data/gyrolib.ini`**. Your file is never included in packages or replaced by the installer. The configured GyroLib menu shortcut takes precedence over F10.
 
 **Use recommended settings** restores the author's six-view preset: gyro Off in Free camera and Menu camera, Always on in the four aiming views; sensitivity X/Y 2.5, Player space, no inversion, smoothing, acceleration or flick. This also supplies first-install defaults. Applying it preserves your language and menu shortcut. **Reset all settings** remains GyroLib's standard reset. The author preset is compiled into `src/recommended_settings.hpp`, applied with `gl_setting_set` and captured through `gl_capture_recommended_settings` before loading your preferences. No external preset file is required.
 
@@ -35,7 +35,7 @@ F9 records a 30-second diagnostic; press again to stop early. REFramework's Scri
 
 ## Build
 
-Requirements: Windows x64, CMake 3.24+, a C++17 MSVC toolchain, Git, and a current installed **GyroLib 1.0 SDK with Core, Steam and Overlay components**. The SDK must expose the recommended-settings and long-press-blocking APIs used by this source. The standard build requires its shared bundled SDL runtime. GyroLib is an external dependency and is never built or modified by this project.
+Requirements: Windows x64, CMake 3.24+, a C++17 MSVC toolchain, Git, and a current installed **GyroLib 1.1 SDK with Core, Steam and Overlay components**. The SDK must expose the recommended-settings and long-press-blocking APIs used by this source. The standard build requires its shared bundled SDL runtime. GyroLib is an external dependency and is never built or modified by this project.
 
 ```powershell
 ./tools/bootstrap.ps1
@@ -43,7 +43,7 @@ cmake -S . -B build -A x64 -DGYROLIB_SDK_DIR="C:/path/to/GyroLib/sdk"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ./tools/stage.ps1 -BuildDirectory ./build
-python ./tools/package.py Monster-Hunter-Rise-Gyro-mod-1.0.0.zip
+python ./tools/package.py Monster-Hunter-Rise-Gyro-mod-1.0.1.zip
 ```
 
 `bootstrap.ps1` downloads the pinned REFramework source revision; its plugin header and bundled Lua 5.4.3 are compiled, not REFramework itself. You can set `REFRAMEWORK_SOURCE_DIR` to an existing pinned checkout. The staging manifest remembers that path so notices come from the dependency actually built. The local sibling SDK path is only a development convenience; use `GYROLIB_SDK_DIR` on another machine.
@@ -59,7 +59,7 @@ For a local installation from a build:
 ./tools/install-update.ps1 -GameDirectory "C:/path/to/MonsterHunterRise" -BuildDirectory ./build
 ```
 
-The installer records hashes under `reframework/MHRGyro/install-manifest.json`. It supports a clean first install and tracked updates, and refuses unrelated modified files. `-ScriptsOnly` requires both installed DLLs to match the build; after it completes, use ScriptRunner â†’ Reset scripts. Full DLL updates require closing Rise. This developer installer also copies the configured SDK's `gyrolib.dll`; it does not install REFramework. Public release archives omit both dependencies.
+The installer records hashes under `reframework/MHRGyro/install-manifest.json`. It supports a clean first install and tracked updates, and refuses unrelated modified files. `-ScriptsOnly` requires both installed DLLs to match the build; after it completes, use ScriptRunner > Reset scripts. Full DLL updates require closing Rise. This developer installer also copies the configured SDK's `gyrolib.dll`; it does not install REFramework. Public release archives omit both dependencies.
 
 ## Development and reports
 

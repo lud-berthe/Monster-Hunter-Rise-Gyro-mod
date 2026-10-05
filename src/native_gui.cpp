@@ -31,6 +31,7 @@ struct MhrGui {
     void* swapchain=nullptr;
     void* queue=nullptr;
     ComPtr<ID3D12Device> device;
+    uint32_t color_space=GL_OVERLAY_COLOR_SPACE_AUTO;
     int result=GL_OK;
     std::string error;
 };
@@ -38,6 +39,7 @@ namespace {
 std::mutex registry_mutex;
 std::vector<std::shared_ptr<MhrGui>> registry;
 std::atomic<bool> enabled=false;
+std::atomic<uint32_t> observed_color{GL_OVERLAY_COLOR_SPACE_AUTO};
 MhrGuiLog logger=nullptr;
 
 // Public REFramework resize callbacks may arrive on a different game thread
@@ -171,8 +173,13 @@ void mhr_gui_present(const MhrGuiRenderer& renderer) {
                 gl_overlay_set_open(gui->overlay,0); // No capture without a usable renderer.
                 continue;
             }
+            DXGI_SWAP_CHAIN_DESC current{};
+            if(FAILED(static_cast<IDXGISwapChain*>(renderer.swapchain)->GetDesc(&current)))continue;
+            auto color=observed_color.load();
+            if(current.BufferDesc.Format==DXGI_FORMAT_R16G16B16A16_FLOAT)color=1;
+            else if(current.BufferDesc.Format==DXGI_FORMAT_R8G8B8A8_UNORM || current.BufferDesc.Format==DXGI_FORMAT_B8G8R8A8_UNORM)color=0;
             if(gui->initialized && (gui->swapchain!=renderer.swapchain || gui->queue!=renderer.queue ||
-                gui->device.Get()!=renderer.device)) {
+                gui->device.Get()!=renderer.device || gui->color_space!=color)) {
                 if(!shutdown(*gui))continue;
                 gui->faulted=false;
             }
@@ -185,14 +192,14 @@ void mhr_gui_present(const MhrGuiRenderer& renderer) {
                 }
                 DXGI_SWAP_CHAIN_DESC description{};
                 if(FAILED(swapchain->GetDesc(&description))){gui->error="Swapchain description unavailable";continue;}
-                const gl_overlay_dx12_desc desc{sizeof(desc),GL_OVERLAY_ABI_VERSION,0,0,
+                const gl_overlay_dx12_desc desc{sizeof(desc),GL_OVERLAY_ABI_VERSION,color,0,
                     description.OutputWindow,swapchain.Get(),renderer.queue};
                 const auto result=gl_overlay_dx12_init(gui->overlay,&desc);
-                if(result!=GL_OK){diagnostic(*gui,result,"DX12/SDR initialization");gui->faulted=true;continue;}
+                if(result!=GL_OK){diagnostic(*gui,result,"DX12 initialization");gui->faulted=true;continue;}
                 gui->initialized=true;gui->swapchain=renderer.swapchain;gui->queue=renderer.queue;
-                gui->device=static_cast<ID3D12Device*>(renderer.device);
+                gui->device=static_cast<ID3D12Device*>(renderer.device);gui->color_space=color;
                 gui->error.clear();
-                if(logger)logger("MHRGyro GUI: independent DX12 renderer ready on thread %lu",GetCurrentThreadId());
+                if(logger)logger("MHRGyro GUI: independent DX12 renderer ready on thread %lu (format=%u, color_space=%u)",GetCurrentThreadId(),unsigned(description.BufferDesc.Format),color);
             }
             DXGI_SWAP_CHAIN_DESC description{};
             if(FAILED(static_cast<IDXGISwapChain*>(renderer.swapchain)->GetDesc(&description)))continue;
@@ -257,6 +264,14 @@ int mhr_gui_state(lua_State* l) {
         lua_pushlstring(l,gui->error.data(),gui->error.size());lua_setfield(l,-2,"error");
     }
     return 1;
+}
+int mhr_gui_report_color_space(lua_State* l) {
+    uint32_t color=GL_OVERLAY_COLOR_SPACE_AUTO;
+    if(lua_isinteger(l,1)){
+        const auto value=lua_tointeger(l,1);
+        if(value==0 || value==1 || value==12)color=uint32_t(value);
+    }
+    observed_color.store(color);return 0;
 }
 int mhr_gui_set_open(lua_State* l) {
     luaL_checktype(l,1,LUA_TBOOLEAN);

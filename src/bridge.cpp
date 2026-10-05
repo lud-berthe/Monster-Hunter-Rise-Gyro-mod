@@ -404,6 +404,7 @@ void mhr_register(lua_State* l) {
     lua_pushcfunction(l,mhr_window_state);lua_setfield(l,-2,"window_state");
     lua_pushcfunction(l,mhr_gui_state);lua_setfield(l,-2,"gui_state");
     lua_pushcfunction(l,mhr_gui_set_open);lua_setfield(l,-2,"gui_set_open");
+    lua_pushcfunction(l,mhr_gui_report_color_space);lua_setfield(l,-2,"gui_report_color_space");
     boolean(l,"gui_available",mhr_gui_available());
     boolean(l,"window_transport_available",mhr_window_reader_available());
     number(l,"camera_integration_version",4);

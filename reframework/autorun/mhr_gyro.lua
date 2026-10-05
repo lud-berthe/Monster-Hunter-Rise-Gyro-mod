@@ -157,7 +157,30 @@ profile.install(function()
     local ok,err=pcall(function() controller:step() end)
     if not ok then controller.error=tostring(err) end
 end)
+-- Observe the image encoding, not whether the monitor supports HDR. The
+-- renderer can use 10-bit SDR while the Windows desktop remains in HDR.
+local color_last=nil
+local function report_color_space()
+    if type(mhr_gyro_native.gui_report_color_space)~="function" then return end
+    local ok,value=pcall(function()
+        local kind=sdk.find_type_definition("via.render.Renderer")
+        local instance=sdk.get_native_singleton("via.render.Renderer")
+        if not kind or not instance then return nil end
+        local config=sdk.call_native_func(instance,kind,"get_RenderConfig")
+        if not config then return nil end
+        return sdk.call_native_func(config,sdk.find_type_definition("via.render.RenderConfig"),"get_ColorSpace")
+    end)
+    local color=nil
+    if ok and value==3 then color=12
+    elseif ok and (value==1 or value==2) then color=0 end
+    if tostring(color)~=color_last then
+        log.info("MHRGyro GUI: observed DXGI color space="..tostring(color).." (RenderConfig="..tostring(value)..")")
+        color_last=tostring(color)
+    end
+    mhr_gyro_native.gui_report_color_space(color)
+end
 re.on_frame(function()
+    report_color_space()
     controller:key(reframework:is_key_down(0x79))
     if profile.verified~=true then
         camera_test:key(reframework:is_key_down(0x77),reader_description)
