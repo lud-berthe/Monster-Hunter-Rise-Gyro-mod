@@ -21,7 +21,7 @@ local c=Controller.new(native,profile)
 c:step(); assert(calls==0 and not received.bindings_verified and #received.contexts==0)
 profile.verified=true
 c:step(); assert(calls==1 and c.error==nil and #received.contexts==1)
-assert(received.aiming==nil and received.alt_fire==nil)
+assert(received.aiming==nil and received.alt_fire==nil and received.include_menu==false)
 -- Even nonzero native output cannot move the camera without an active view.
 profile.contexts={}; reported_active_context=0
 c:step(); assert(calls==1 and c.error==nil and #received.contexts==0)
@@ -53,7 +53,7 @@ reported_update_result=-2; c:step(); assert(calls==5)
 reported_update_result=nil; c:step(); assert(calls==5)
 reported_update_result=0
 c:key(true); c:key(true); assert(c.panel_open)
-c:step(); assert(calls==5)
+c:step(); assert(calls==5 and received.include_menu==true)
 c:key(false); c:key(true); assert(not c.panel_open)
 for _,name in ipairs({"menu_open","paused"}) do
     state[name]=true; c:step(); assert(calls==5); state[name]=false
@@ -149,11 +149,11 @@ local gui_profile={verified=true,contexts={normal_view()},read_state=function() 
 local gui_controller=Controller.new(gui_native,gui_profile)
 local before=calls
 gui_controller:key(true);assert(not gui_controller.panel_open)
-gui_controller:step();assert(calls==before+1 and not received.panel_open)
-capture=7;gui_controller:step();assert(calls==before+1 and received.panel_open)
-capture=nil;gui_controller:step();assert(calls==before+1 and received.panel_open)
+gui_controller:step();assert(calls==before+1 and not received.panel_open and received.include_menu==false)
+capture=7;gui_controller:step();assert(calls==before+1 and received.panel_open and received.include_menu==false)
+capture=nil;gui_controller:step();assert(calls==before+1 and received.panel_open and received.include_menu==false)
 gui_native.gui_state=function() error("GUI unavailable") end
-gui_controller:step();assert(calls==before+1 and received.panel_open)
+gui_controller:step();assert(calls==before+1 and received.panel_open and received.include_menu==false)
 print("MHR controller: native shortcut ownership and GUI capture gates passed")
 
 -- Menu opt-in belongs to the selected view. A stale snapshot from the previous
@@ -164,9 +164,9 @@ local menu_state={menu_open=true,paused=false,focused=true,camera_allowed=true}
 local menu_profile={verified=true,recenter_verified=true,contexts={
     {id=2,label='Menu',description='',priority=30,verified=true,camera_in_menu=true,read_active=function() return true end}},
     read_state=function() return menu_state end,
-    apply_camera=function() yaw_calls=yaw_calls+1 end,recenter=function() center_calls=center_calls+1 end}
+    apply_camera=function() yaw_calls=yaw_calls+1 end,recenter=function(fraction) assert(fraction==.25);center_calls=center_calls+1 end}
 local menu_native={create=function() return {tick=function()
-    return {active_context=output_view,update_result=0,yaw_degrees=1,pitch_degrees=0,recenter_requested=request_center}
+    return {active_context=output_view,update_result=0,yaw_degrees=1,pitch_degrees=0,recenter_requested=request_center,recenter_fraction=request_center and .25 or 0}
 end} end}
 local menu=Controller.new(menu_native,menu_profile)
 menu:step();assert(yaw_calls==1 and center_calls==1)
@@ -175,4 +175,13 @@ request_center=true;output_view=1;menu:step();assert(yaw_calls==2 and center_cal
 output_view=2;menu_profile.contexts[1].camera_in_menu=false;menu:step();assert(yaw_calls==2 and center_calls==1)
 menu_profile.contexts[1].camera_in_menu=true;menu_state.paused=true;menu:step();assert(center_calls==1)
 menu_state.paused=false;menu_profile.recenter_verified=false;menu:step();assert(yaw_calls==3 and center_calls==1)
+menu_profile.recenter_verified=true
+local tick=menu.session.tick
+for _,fraction in ipairs({0,-.1,1.1,0/0,math.huge}) do
+    menu.session.tick=function(...)
+        local snapshot=tick(...);snapshot.recenter_fraction=fraction;return snapshot
+    end
+    menu:step();assert(center_calls==1)
+end
+menu.session.tick=tick
 print("MHR controller: menu opt-in, exact active profile and recenter delivery passed")

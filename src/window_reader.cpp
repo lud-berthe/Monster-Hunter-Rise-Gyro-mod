@@ -179,8 +179,8 @@ struct MhrWindowReader {
     Value host=table(),commands=table(),snapshot=table();
     Value filter_results=table();
     double yaw=0,pitch=0;
-    bool recenter=false;
-    void clear_output(){yaw=pitch=0;recenter=false;filter_results=table();}
+    double recenter_fraction=0;
+    void clear_output(){yaw=pitch=recenter_fraction=0;filter_results=table();}
     std::string directory;
     lua_State* vm=nullptr; // Created, used and closed only by window dispatcher.
     int reference=LUA_NOREF;
@@ -260,10 +260,12 @@ void process(MhrWindowReader& reader,bool window_focused,uint32_t tid) {
         if(safe(host) && numeric(field(snapshot,"update_result"))==0) {
             const double yaw=numeric(field(snapshot,"yaw_degrees")),pitch=numeric(field(snapshot,"pitch_degrees"));
             if(std::isfinite(yaw) && std::isfinite(pitch)){reader.yaw+=yaw;reader.pitch+=pitch;}
-            reader.recenter|=truth(snapshot,"recenter_requested");
+            const double fraction=numeric(field(snapshot,"recenter_fraction"));
+            if(std::isfinite(fraction) && fraction>0 && fraction<=1)
+                reader.recenter_fraction=1-(1-reader.recenter_fraction)*(1-fraction);
         }
         set(snapshot,"yaw_degrees",number(0));set(snapshot,"pitch_degrees",number(0));
-        set(snapshot,"recenter_requested",boolean(false));
+        set(snapshot,"recenter_requested",boolean(false));set(snapshot,"recenter_fraction",number(0));
         if(const auto* results=field(snapshot,"filter_results");results && results->kind==Value::Table) {
             for(const auto& entry:results->fields) {
                 if(reader.filter_results.fields.size()>=128) {reader.filter_results=table();break;}
@@ -363,9 +365,11 @@ int mhr_window_reader_tick(lua_State* l,const std::shared_ptr<MhrWindowReader>& 
             }
             if(fresh && safe(host) && expected==numeric(field(snapshot,"active_context"))) {
                 set(snapshot,"yaw_degrees",number(reader->yaw));set(snapshot,"pitch_degrees",number(reader->pitch));
-                set(snapshot,"recenter_requested",boolean(reader->recenter && truth(host,"recenter_verified")));
+                const double fraction=truth(host,"recenter_verified")?reader->recenter_fraction:0;
+                set(snapshot,"recenter_requested",boolean(fraction>0));
+                set(snapshot,"recenter_fraction",number(fraction));
             } else {set(snapshot,"yaw_degrees",number(0));set(snapshot,"pitch_degrees",number(0));
-                set(snapshot,"recenter_requested",boolean(false));}
+                set(snapshot,"recenter_requested",boolean(false));set(snapshot,"recenter_fraction",number(0));}
             reader->clear_output();
             for(auto& p:commands.fields) {
                 Value key;key.kind=Value::Integer;key.integer=static_cast<lua_Integer>(reader->commands.fields.size()+1);

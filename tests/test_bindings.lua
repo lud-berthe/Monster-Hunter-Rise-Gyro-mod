@@ -77,9 +77,17 @@ for _,kind in ipairs({0,4,5,99,false}) do machine_kind=kind;assert(not binding:r
 machine_kind=2;camera_mode=0;rotation=0;assert(binding:read_state().active_view==1) -- stale machine type
 camera_mode=0;rotation=3;assert(not binding:read_state().camera_allowed)
 rotation=0;camera_type=3;assert(not binding:read_state().camera_allowed);camera_type=1
-target={x=.4,y=1.2};binding:recenter();assert(target.x==0 and target.y==1.2 and #writes==1)
-queries.isOpenPauseWindow=true;binding:recenter();assert(#writes==1);queries.isOpenPauseWindow=false
-minimum=.1;binding:recenter();assert(target.x==.1 and target.y==1.2);minimum=-.8
+target={x=.4,y=1.2};binding:recenter(1);assert(target.x==0 and target.y==1.2 and #writes==1)
+queries.isOpenPauseWindow=true;binding:recenter(1);assert(#writes==1);queries.isOpenPauseWindow=false
+minimum=.1;binding:recenter(1);assert(target.x==.1 and target.y==1.2);minimum=-.8
+writes={}
+target={x=.8,y=1.2};binding:recenter(.25)
+assert(math.abs(target.x-.6)<1e-9 and target.y==1.2)
+binding:recenter(.5);assert(math.abs(target.x-.3)<1e-9)
+binding:recenter(1);assert(target.x==0 and target.y==1.2)
+for _,bad in ipairs({0,-1,1.1,0/0,math.huge}) do
+    assert(not pcall(function() binding:recenter(bad) end))
+end
 writes={}
 -- GyroLib positive yaw means right. Rise's camera angle decreases for a
 -- right turn; check both directions and both crossings of the +/-pi boundary.

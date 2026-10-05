@@ -5,7 +5,7 @@ function ReaderProbe.describe(snapshot,window)
     for _,key in ipairs({"reader_available","reader_error","reader_owner_thread","reader_resume_count","window_transport",
         "steam_result","steam_error","steam_session_error","source","accepted_samples","rejected_samples","dropped_samples","update_result",
         "active_context","bindings_verified","host_capabilities","settings_save_result",
-        "yaw_degrees","pitch_degrees","recenter_requested","suppress_native_right_stick","suppress_native_right_touchpad",
+        "yaw_degrees","pitch_degrees","recenter_requested","recenter_fraction","suppress_native_right_stick","suppress_native_right_touchpad",
         "flick_input","long_press_filter","gui_capture","calibration_state","stationary","calibrated_dps","gravity","endpoints"}) do
         result[key]=snapshot[key]
     end

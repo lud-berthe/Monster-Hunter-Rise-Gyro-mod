@@ -93,6 +93,8 @@ function Controller:step()
             end
         else self.error="Game profile did not supply all required camera safety states" end
     end
+    -- The DLL panel has its own model; only an open Lua fallback needs tables.
+    host.include_menu=self.native.gui_available~=true and panel_open
     local callbacks={}
     for _,channel in ipairs(suppression_channels) do
         callbacks[channel.owner]=host[channel.cap] and self.profile[channel.callback] or nil
@@ -138,8 +140,10 @@ function Controller:step()
             local ok,err=pcall(self.profile.apply_camera,yaw,pitch)
             if not ok then self.error=tostring(err); self:release_stick() end
         end
-        if not self.error and host.recenter_verified and self.snapshot.recenter_requested==true then
-            local ok,err=pcall(self.profile.recenter)
+        local fraction=self.snapshot.recenter_fraction
+        if not self.error and host.recenter_verified and type(fraction)=="number"
+            and fraction>0 and fraction<=1 then
+            local ok,err=pcall(self.profile.recenter,fraction)
             if not ok then self.error=tostring(err);self:release_stick() end
         end
     end

@@ -1,9 +1,9 @@
-MONSTER HUNTER RISE GYRO MOD 1.0.1
+MONSTER HUNTER RISE GYRO MOD 1.1.0
 
 INSTALL
 Close Rise. Install REFramework for Rise, then download gyrolib.dll from
-GyroLib 1.1.0 and place it beside MonsterHunterRise.exe:
-https://github.com/lud-berthe/GyroLib/releases/tag/v1.1.0
+GyroLib 1.2.0 and place it beside MonsterHunterRise.exe:
+https://github.com/lud-berthe/GyroLib/releases/tag/v1.2.0
 https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9
 
 Extract this mod archive beside MonsterHunterRise.exe.
@@ -57,7 +57,7 @@ VALIDATION
 - Recenter, including siege weapons; this part still needs live validation.
 
 Live testing uses a Steam Controller 2026 through its puck. Other controller
-models are unverified. This is an experimental mod; version 1.0.1 does not imply validation of every setup.
+models are unverified. This is an experimental mod; version 1.1.0 does not imply validation of every setup.
 
 REPORTING
 Press F9, reproduce the problem with both settings panels closed, then wait
@@ -69,7 +69,7 @@ used, together with:
 
 SETTINGS / REMOVAL
 Settings are saved in reframework/data/gyrolib.ini and are not included here.
-This build uses GyroLib 1.1.0 (schema=0.2.0). Earlier integer development
+This build uses GyroLib 1.2.0 (schema=0.2.0). Earlier integer development
 schemas are not loaded automatically. Keep a backup before updating an old
 test installation; its settings need a verified conversion to this format.
 The archive contains no saves, personal configuration or recorded reports.

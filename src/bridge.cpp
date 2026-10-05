@@ -35,7 +35,8 @@ struct Session {
     std::thread::id owner;
     bool closed=false;
     bool hardware_requested=false;
-    bool recenter_supported=false,recenter_pending=false;
+    bool recenter_supported=false;
+    double recenter_fraction=0;
     int last_command_result=GL_OK;
     int recommended_settings_result=GL_UNAVAILABLE;
     bool recommended_settings_attempted=false;
@@ -238,11 +239,12 @@ int tick(lua_State* l) {
     const bool recenter_supported=verified && read_bool(l,2,"recenter_verified",false);
     if(recenter_supported!=s->recenter_supported){
         s->recenter_supported=recenter_supported;
-        gl_set_recenter_callback(s->ctx,recenter_supported?+[](void* user){
-            static_cast<Session*>(user)->recenter_pending=true;
+        gl_set_recenter_step_callback(s->ctx,recenter_supported?+[](void* user,double fraction){
+            auto& pending=static_cast<Session*>(user)->recenter_fraction;
+            pending=1-(1-pending)*(1-fraction);
         }:nullptr,s);
     }
-    s->recenter_pending=false;
+    s->recenter_fraction=0;
     sync_contexts(l,s,verified);
     commands(l,s,3);
     gl_host_state host{}; // Legacy aiming/alt_fire fields remain zero and unused.
@@ -310,7 +312,8 @@ int tick(lua_State* l) {
     }
     lua_setfield(l,-2,"filter_results");
     number(l,"yaw_degrees",out.yaw_degrees); number(l,"pitch_degrees",out.pitch_degrees);
-    boolean(l,"recenter_requested",update_result==GL_OK && s->recenter_pending);
+    boolean(l,"recenter_requested",update_result==GL_OK && s->recenter_fraction>0);
+    number(l,"recenter_fraction",update_result==GL_OK?s->recenter_fraction:0);
     boolean(l,"suppress_native_right_stick",out.suppress_native_right_stick!=0);
     boolean(l,"suppress_native_right_touchpad",update_result==GL_OK && gl_suppress_native_right_touchpad(s->ctx)!=0);
     gl_flick_input flick{};
@@ -361,20 +364,22 @@ int tick(lua_State* l) {
         lua_rawseti(l,-2,i+1);
     }
     lua_setfield(l,-2,"endpoints");
+    // The DLL panel owns its model. Serialize it only for the Lua fallback UI.
+    const bool include_menu=read_bool(l,2,"include_menu",true);
     lua_newtable(l);
-    for(uint32_t i=0;i<gl_menu_setting_count(s->ctx);++i) {
+    if(include_menu)for(uint32_t i=0;i<gl_menu_setting_count(s->ctx);++i) {
         gl_setting_info v{}; if(gl_setting_at(s->ctx,i,&v)!=GL_OK) continue;
         push_setting(l,s,v); lua_rawseti(l,-2,i+1);
     }
     lua_setfield(l,-2,"settings");
     lua_newtable(l);
-    for(uint32_t i=0;i<gl_menu_shared_setting_count(s->ctx);++i) {
+    if(include_menu)for(uint32_t i=0;i<gl_menu_shared_setting_count(s->ctx);++i) {
         gl_setting_info v{}; if(gl_menu_shared_setting_at(s->ctx,i,&v)!=GL_OK) continue;
         push_setting(l,s,v); lua_rawseti(l,-2,i+1);
     }
     lua_setfield(l,-2,"shared_settings");
     lua_newtable(l);
-    for(uint32_t i=0;i<gl_menu_tab_count(s->ctx);++i) {
+    if(include_menu)for(uint32_t i=0;i<gl_menu_tab_count(s->ctx);++i) {
         gl_menu_tab tab{}; if(gl_menu_tab_at(s->ctx,i,&tab)!=GL_OK) continue;
         lua_newtable(l);
         lua_pushinteger(l,static_cast<lua_Integer>(tab.id)); lua_setfield(l,-2,"id");

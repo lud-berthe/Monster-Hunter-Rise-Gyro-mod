@@ -5,9 +5,13 @@ extern "C" {
 #include <lualib.h>
 }
 #include <cstdio>
+#include <chrono>
+#include <thread>
 int main(int argc,char** argv) {
     if(argc!=2 && argc!=3) return 2;
     lua_State* l=luaL_newstate(); luaL_openlibs(l); mhr_register(l);
+    lua_pushcfunction(l,+[](lua_State*) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(5));return 0;});
+    lua_setglobal(l,"wait_tick");
     lua_pushstring(l,argv[1]); lua_setglobal(l,"root");
     if(argc==3) {
         lua_pushstring(l,argv[2]);lua_setglobal(l,"frontend_entry");
@@ -186,7 +190,7 @@ int main(int argc,char** argv) {
       local result=request();assert(not result.recenter_requested)
       assert(setting(result,'context.2.camera.recenter_button').visible)
       view.camera_in_menu=true
-      result=request();assert(result.recenter_requested)
+      result=request();assert(result.recenter_requested and result.recenter_fraction==1)
       assert(not camera:tick(menu,{}).recenter_requested) -- consumed once
       for _,flag in ipairs({'paused','panel_open'}) do
         menu[flag]=true;assert(not request().recenter_requested);menu[flag]=false
@@ -198,6 +202,37 @@ int main(int argc,char** argv) {
       menu.recenter_verified=false;result=request()
       assert(result.last_command_result==UNAVAILABLE and not result.recenter_requested)
       assert(not setting(result,'context.2.camera.recenter_button').visible)
+      -- Lightweight snapshots retain commands, recenter and view state. Opening
+      -- the fallback restores fresh settings, including changes made while hidden.
+      menu.recenter_verified=true;menu.include_menu=false
+      result=camera:tick(menu,{{op='set',id='context.2.sensitivity_x',value=4},{op='recenter'}})
+      assert(result.last_command_result==OK and result.recenter_requested and result.active_context==2)
+      assert(#result.settings==0 and #result.shared_settings==0 and #result.tabs==0)
+      menu.include_menu=true;result=camera:tick(menu,{})
+      assert(setting(result,'context.2.sensitivity_x').value==4 and #result.tabs==1)
+      assert(not result.recenter_requested)
+      -- The step callback exposes duration, keeps the zero-ms default, and
+      -- reaches level over time even with menu serialization disabled.
+      assert(setting(result,'context.2.camera.recenter_duration_ms').value==0)
+      menu.include_menu=false
+      result=camera:tick(menu,{{op='set',id='context.2.camera.recenter_duration_ms',value=100},{op='recenter'}})
+      assert(result.last_command_result==OK)
+      local remaining,partial,finished=1,false,false
+      for i=1,100 do
+        local f=result.recenter_fraction
+        assert(type(f)=='number' and f>=0 and f<=1)
+        assert(result.recenter_requested==(f>0))
+        remaining=remaining*(1-f)
+        if f>0 and f<1 then partial=true end
+        if f==1 then finished=true;break end
+        wait_tick();result=camera:tick(menu,{})
+      end
+      assert(partial and finished and remaining==0)
+      assert(camera:tick(menu,{}).recenter_fraction==0)
+      request();wait_tick()
+      assert(camera:tick(menu,{}).recenter_fraction>0)
+      menu.panel_open=true;assert(camera:tick(menu,{}).recenter_fraction==0)
+      menu.panel_open=false;wait_tick();assert(camera:tick(menu,{}).recenter_fraction==0)
       camera:close()
       print('MHR bridge: independent views, stable tabs, capabilities and memory-only settings passed')
       dofile(root..'/tests/test_controller.lua')

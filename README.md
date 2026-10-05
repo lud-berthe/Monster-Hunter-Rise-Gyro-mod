@@ -6,7 +6,7 @@ A Windows x64 REFramework mod that adds native gyro camera control to Monster Hu
 
 - Separate profiles for Free camera, Menu camera, Wirebug aim, Weapon aim, Ballista and Cannon.
 - Flick stick using the right stick, physical right touchpad, or both when supported by the controller.
-- Configurable recenter button and automatic settings persistence.
+- Configurable recenter button and transition duration, with automatic settings persistence.
 - GyroLib's native DirectX 12 settings overlay, with game-input capture while open.
 - SDL motion acquisition with Steam Input fallback, on the game window thread.
 
@@ -15,8 +15,8 @@ This is an experimental mod. The tested setup is Steam Controller 2026 through i
 ## Install
 
 1. Close Rise and install [REFramework for Rise](https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9). The tested runtime is nightly 01424, plugin API 1.15.0. The Microsoft Visual C++ x64 runtime is required.
-2. Download **`gyrolib.dll`** from [GyroLib 1.1.0](https://github.com/lud-berthe/GyroLib/releases/tag/v1.1.0) and put it beside `MonsterHunterRise.exe`.
-3. Extract **`Monster-Hunter-Rise-Gyro-mod-1.0.1.zip`** from [Releases](https://github.com/lud-berthe/Monster-Hunter-Rise-Gyro-mod/releases) beside `MonsterHunterRise.exe`. Back up any existing mod files first.
+2. Download **`gyrolib.dll`** from [GyroLib 1.2.0](https://github.com/lud-berthe/GyroLib/releases/tag/v1.2.0) and put it beside `MonsterHunterRise.exe`.
+3. Extract **`Monster-Hunter-Rise-Gyro-mod-1.1.0.zip`** from [Releases](https://github.com/lud-berthe/Monster-Hunter-Rise-Gyro-mod/releases) beside `MonsterHunterRise.exe`. Back up any existing mod files first.
 4. Use DirectX 12. Disable Steam Input gyro-to-mouse/joystick output to avoid duplicate rotation.
 5. For **touchpad flick**, set Steam Input's right touchpad to **None**. The mod reads the physical touchpad through GyroLib; it does not inspect or change your Steam layout.
 6. Launch Rise, load a save and press F10. Close REFramework's own panel with Insert if necessary.
@@ -43,7 +43,7 @@ cmake -S . -B build -A x64 -DGYROLIB_SDK_DIR="C:/path/to/GyroLib/sdk"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ./tools/stage.ps1 -BuildDirectory ./build
-python ./tools/package.py Monster-Hunter-Rise-Gyro-mod-1.0.1.zip
+python ./tools/package.py Monster-Hunter-Rise-Gyro-mod-1.1.0.zip
 ```
 
 `bootstrap.ps1` downloads the pinned REFramework source revision; its plugin header and bundled Lua 5.4.3 are compiled, not REFramework itself. You can set `REFRAMEWORK_SOURCE_DIR` to an existing pinned checkout. The staging manifest remembers that path so notices come from the dependency actually built. The local sibling SDK path is only a development convenience; use `GYROLIB_SDK_DIR` on another machine.

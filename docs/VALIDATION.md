@@ -1,5 +1,13 @@
 # Validation and audit
 
+## Release 1.1.0 — 6 October 2026
+
+The user reproduced physical-mouse stutter with the mod at 144 fps, but not at 60 or 120 fps, including with Flick Stick disabled and the controller disconnected. After removing unnecessary menu serialization from gameplay updates, the user confirmed that the stutter was fixed at 144 fps.
+
+The six-view synthetic bridge benchmark measured about 4.55 ms per update with full menu tables and 0.006 ms without them in the same executable. These are bridge timings, not whole-game frame times. The DLL panel owns its model; Lua menu tables are now built only for an open fallback panel. `mhr_bridge_benchmark` reproduces this comparison without hardware or persistent settings.
+
+The progressive recenter adapter builds against the published GyroLib 1.2.0 SDK. All 8 CTests pass with SDL enabled and all 8 with SDL disabled, including duration/default checks, exact completion, cancellation when the panel opens, fractional camera pitch, invalid fractions and active-view safety. The user confirmed timed recentering and continued mouse-camera smoothness at 144 fps in the updated installation.
+
 ## Release 1.0.1 — 5 October 2026
 
 Fresh Windows x64 Release builds against the installed GyroLib 1.1.0 SDK pass **8/8 CTests with SDL enabled and 8/8 with SDL disabled**. This includes packaging, the bundled Lua script and hidden DX12 GUI checks.

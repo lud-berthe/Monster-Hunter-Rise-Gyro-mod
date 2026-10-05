@@ -52,7 +52,7 @@ return {
         end
         return bindings:apply_camera(yaw,pitch)
     end,
-    recenter=function() return bindings:recenter() end,
+    recenter=function(fraction) return bindings:recenter(fraction) end,
     suppress_right_stick=function(enabled,id) return stick:request(enabled,id) end,
     suppress_right_touchpad=function(enabled,id)
         if not touchpad_native_output_disabled then error("Disable Steam Input right-touchpad output before using touchpad flick") end

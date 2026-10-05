@@ -147,7 +147,8 @@ function Bindings:camera_ready(state)
     end
     return true
 end
-function Bindings:recenter()
+function Bindings:recenter(fraction)
+    if not finite(fraction) or fraction<=0 or fraction>1 then error("Invalid recenter fraction") end
     local state=self:read_state()
     if not self:camera_ready(state) then return end
     local limits=state.camera:call("get_CameraAngleXLimit")
@@ -155,6 +156,10 @@ function Bindings:recenter()
     if not finite(low) or not finite(high) or low>high or low<-math.pi or high>math.pi then
         error("Camera radian pitch limits unavailable")
     end
-    state.camera:call("setTurnAngXTarget",math.max(low,math.min(high,0)))
+    local angle=state.camera:call("get_CameraAngleTarget")
+    if not angle or not finite(angle.x) then error("Camera pitch unavailable") end
+    local level=math.max(low,math.min(high,0))
+    local pitch=fraction==1 and level or angle.x+(level-angle.x)*fraction
+    state.camera:call("setTurnAngXTarget",math.max(low,math.min(high,pitch)))
 end
 return Bindings

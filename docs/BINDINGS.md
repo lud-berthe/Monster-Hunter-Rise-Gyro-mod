@@ -12,6 +12,14 @@ GyroLib returns integrated degrees; the mod applies them once, without another f
 
 Siege weapons derive their camera from the mounted weapon. `machine.lua` adds radians to `_CameraOperation` after `CameraInput.ReflectInput`, preserving native input and game limits. Requests are consumed once, require matching view/input and expire after one frame of delay. Their age starts at the oldest queued delta, so repeated updates cannot retain an indefinitely unconsumed turn.
 
+Recenter uses `gl_set_recenter_step_callback`. GyroLib supplies the fraction of
+remaining pitch to remove; the game adapter moves its pitch target toward level,
+clamped to the current camera limits, without changing yaw. Duration is per view,
+0–1000 ms, default 0 ms. It appears under Recenter's + when a button is assigned.
+The window-thread bridge combines pending fractions as
+`1 - (1 - combined) * (1 - fraction)` and consumes them once, after angular deltas.
+The same focus, pause, active-view and overlay checks guard both camera actions.
+
 ## Native inputs
 
 The flick hook temporarily clears camera-owned `_AnalogR` and `_AnalogRraw` fields on `_PadOriginal` and `_PadArrange`, then restores them after ReflectInput. Original values and nested-hook state are retained. A resolved mouse-lever observation prevents masking real mouse input; missing observation withdraws stick-suppression capability.
@@ -24,7 +32,7 @@ Touchpad flick relies on an explicit user configuration: right touchpad set to N
 
 ## Ownership and GUI
 
-REFramework creates the Lua-facing session. A separate Lua VM and GyroLib context live on the game window thread; SDL/Steam polling and context destruction occur there. Plain values cross a mutex-protected queue; no Lua pointers or borrowed SDK strings cross threads. Command order and 64-bit integer identities are preserved.
+REFramework creates the Lua-facing session. A separate Lua VM and GyroLib context live on the game window thread; SDL/Steam polling and context destruction occur there. Menu tables cross the queue only while the Lua fallback panel is open; the DLL panel reads its own GyroLib model. Plain values cross a mutex-protected queue; no Lua pointers or borrowed SDK strings cross threads. Command order and 64-bit integer identities are preserved.
 
 Each camera callback sends fresh host state and consumes accumulated output once. Both sides withdraw permissions after 100 ms of stale state: the owner timer handles a delayed producer, and the consumer rejects old snapshots if the owner is blocked. View changes, focus loss and overlay capture discard queued motion.
 
@@ -32,7 +40,7 @@ Script GC detaches the backend with permissions, commands and deltas cleared. A 
 
 The mod polls SDL, polls GyroLib's borrowed Steam reader, commits overlay commands once and then calls `gl_update`. GyroLib publishes its own completed-frame snapshot. The MHR-specific Steam session helper attempts public `SteamInput::Init(false)` once if the game's observed v005 interface reports no controllers. It never calls SteamAPI_Init, RunFrame, Shutdown or changes layouts/action sets.
 
-The native overlay requires DX12 and GyroLib 1.1 or later. The Lua adapter reads RenderConfig color space without changing game settings. It reports known SDR/HDR10 encoding to the overlay; unknown values use automatic detection. This avoids interpreting an SDR 10-bit buffer as PQ merely because the desktop uses HDR. FP16 buffers use scRGB. A color-space change reinitializes the overlay on its render thread. A dedicated render worker owns its init/render/shutdown operations; Present and resize callbacks wait for completion. Owner-thread overlay detach precedes context destruction; GPU resources are retained after a live-device timeout for safe retry. The SDK owns its shortcut, controls and controller navigation. Lifecycle window messages and Alt+F4 remain available.
+The native overlay requires DX12 and GyroLib 1.2 or later. The Lua adapter reads RenderConfig color space without changing game settings. It reports known SDR/HDR10 encoding to the overlay; unknown values use automatic detection. This avoids interpreting an SDR 10-bit buffer as PQ merely because the desktop uses HDR. FP16 buffers use scRGB. A color-space change reinitializes the overlay on its render thread. A dedicated render worker owns its init/render/shutdown operations; Present and resize callbacks wait for completion. Owner-thread overlay detach precedes context destruction; GPU resources are retained after a live-device timeout for safe retry. The SDK owns its shortcut, controls and controller navigation. Lifecycle window messages and Alt+F4 remain available.
 
 ## Persistence and SDK boundary
 
