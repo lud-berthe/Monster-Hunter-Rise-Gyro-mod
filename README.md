@@ -14,9 +14,9 @@ This is an experimental mod. The tested setup is Steam Controller 2026 through i
 
 ## Install
 
-1. Close Rise and install [REFramework for Rise](https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9). The tested runtime is nightly 01424, plugin API 1.15.0. The Microsoft Visual C++ x64 runtime is required.
+1. Close Rise and install [REFramework for Rise](https://www.nexusmods.com/monsterhunterrise/mods/26?tab=files). **Nexus Nightly939 or a newer compatible build** is required (plugin API 1.10.0 minimum). Nightly939 and nightly 01424 have been tested in game. The Microsoft Visual C++ x64 runtime is required.
 2. Download **`gyrolib.dll`** from [GyroLib 1.2.0](https://github.com/lud-berthe/GyroLib/releases/tag/v1.2.0) and put it beside `MonsterHunterRise.exe`.
-3. Extract **`Monster-Hunter-Rise-Gyro-mod-1.1.0.zip`** from [Releases](https://github.com/lud-berthe/Monster-Hunter-Rise-Gyro-mod/releases) beside `MonsterHunterRise.exe`. Back up any existing mod files first.
+3. Extract **`Monster-Hunter-Rise-Gyro-mod-1.1.1.zip`** from [Releases](https://github.com/lud-berthe/Monster-Hunter-Rise-Gyro-mod/releases) beside `MonsterHunterRise.exe`. Back up any existing mod files first.
 4. Use DirectX 12. Disable Steam Input gyro-to-mouse/joystick output to avoid duplicate rotation.
 5. For **touchpad flick**, set Steam Input's right touchpad to **None**. The mod reads the physical touchpad through GyroLib; it does not inspect or change your Steam layout.
 6. Launch Rise, load a save and press F10. Close REFramework's own panel with Insert if necessary.
@@ -35,7 +35,7 @@ F9 records a 30-second diagnostic; press again to stop early. REFramework's Scri
 
 ## Build
 
-Requirements: Windows x64, CMake 3.24+, a C++17 MSVC toolchain, Git, and a current installed **GyroLib 1.1 SDK with Core, Steam and Overlay components**. The SDK must expose the recommended-settings and long-press-blocking APIs used by this source. The standard build requires its shared bundled SDL runtime. GyroLib is an external dependency and is never built or modified by this project.
+Requirements: Windows x64, CMake 3.24+, a C++17 MSVC toolchain, Git, and a current installed **GyroLib 1.2 SDK with Core, Steam and Overlay components**. The SDK must expose the recommended-settings and long-press-blocking APIs used by this source. The standard build requires its shared bundled SDL runtime. GyroLib is an external dependency and is never built or modified by this project.
 
 ```powershell
 ./tools/bootstrap.ps1
@@ -43,7 +43,7 @@ cmake -S . -B build -A x64 -DGYROLIB_SDK_DIR="C:/path/to/GyroLib/sdk"
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ./tools/stage.ps1 -BuildDirectory ./build
-python ./tools/package.py Monster-Hunter-Rise-Gyro-mod-1.1.0.zip
+python ./tools/package.py Monster-Hunter-Rise-Gyro-mod-1.1.1.zip
 ```
 
 `bootstrap.ps1` downloads the pinned REFramework source revision; its plugin header and bundled Lua 5.4.3 are compiled, not REFramework itself. You can set `REFRAMEWORK_SOURCE_DIR` to an existing pinned checkout. The staging manifest remembers that path so notices come from the dependency actually built. The local sibling SDK path is only a development convenience; use `GYROLIB_SDK_DIR` on another machine.

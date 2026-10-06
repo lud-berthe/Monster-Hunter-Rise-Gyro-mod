@@ -1,10 +1,11 @@
-MONSTER HUNTER RISE GYRO MOD 1.1.0
+MONSTER HUNTER RISE GYRO MOD 1.1.1
 
 INSTALL
-Close Rise. Install REFramework for Rise, then download gyrolib.dll from
+Close Rise. Install REFramework for Rise (Nexus Nightly939 or a newer compatible
+build; plugin API 1.10.0 minimum), then download gyrolib.dll from
 GyroLib 1.2.0 and place it beside MonsterHunterRise.exe:
 https://github.com/lud-berthe/GyroLib/releases/tag/v1.2.0
-https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9
+https://www.nexusmods.com/monsterhunterrise/mods/26?tab=files
 
 Extract this mod archive beside MonsterHunterRise.exe.
 Back up existing mod files before replacing them.
@@ -57,7 +58,7 @@ VALIDATION
 - Recenter, including siege weapons; this part still needs live validation.
 
 Live testing uses a Steam Controller 2026 through its puck. Other controller
-models are unverified. This is an experimental mod; version 1.1.0 does not imply validation of every setup.
+models are unverified. This is an experimental mod; version 1.1.1 does not imply validation of every setup.
 
 REPORTING
 Press F9, reproduce the problem with both settings panels closed, then wait
@@ -81,7 +82,8 @@ reframework/MHRGyro/licenses/ and README_MHRGyro.txt; these are no longer needed
 by the bundled release. Keep gyrolib.ini to retain your preferences.
 Remove external dependencies only if no other mod uses them.
 
-Tested REFramework (installed separately): nightly 01424, revision
+Tested REFramework (installed separately): Nexus Nightly939 (654bac, API 1.10.0)
+and nightly 01424 (API 1.15.0), revision
 d1461375aee4ec3f313170f8eaad12064eb542d9
 https://github.com/praydog/REFramework-nightly/releases/tag/nightly-01424-d1461375aee4ec3f313170f8eaad12064eb542d9
 Dependency notices: reframework/MHRGyro/LICENSES.txt

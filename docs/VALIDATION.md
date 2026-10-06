@@ -1,5 +1,21 @@
 # Validation and audit
 
+## Release 1.1.1 — 6 October 2026
+
+A user log showed that Nexus Nightly939 (`654bac566ad2cb645a5ddbf72d0008e8698187b8`, plugin API 1.10.0) rejected the plugin before initialization. The plugin had advertised the compilation header's API 1.15.0 even though it uses only callbacks and renderer fields present in 1.10.0. The runtime requirement is now explicitly 1.10.0, independently of the build SDK version. Required function pointers are checked before registration.
+
+Automated checks, Windows x64 Release, GyroLib 1.2.1:
+
+- All 9 CTests pass using Nightly939's official API header and Lua sources.
+- All 9 pass using the pinned nightly 01424 header and Lua sources.
+- The new `mhr_plugin_host_api` fixture loads the actual plugin DLL, checks its exports and minimum version, registers callbacks and exercises a host-owned Lua state across the DLL boundary. It recreates the Lua state to cover script reset and rejects an unsupported host or missing required callback.
+- Cross-version runs also pass: the Nightly939 host fixture loads the modern-SDK plugin, and the modern fixture loads the Nightly939-SDK plugin. The Lua state layouts are identical between these source revisions; the two changed Lua implementation files contain error-path fixes.
+- The Lua hooks used by the mod, including `thread.get_hook_storage`, exist in the Nightly939 source. Existing script tests run under both versions of its bundled Lua.
+
+To repeat the baseline build, configure a separate build directory with `REFRAMEWORK_SOURCE_DIR` pointing to the official Nightly939 source revision, then build Release and run CTest. Run that build's `mhr_plugin_tests.exe` with the full path to the modern build's `MHRGyro.dll` for the cross-version check. Keep the normal pinned dependency checkout unchanged.
+
+The user then confirmed that the mod works in game with Nightly939. The local log confirms revision `654bac566ad2cb645a5ddbf72d0008e8698187b8`, acceptance of the API 1.10.0 requirement, plugin and Lua initialization, and a ready independent DX12 panel. This is a Windows test, not a Proton/Wine validation; it does not establish exhaustive coverage of every feature on Nightly939. Newer builds that preserve the plugin API are expected to remain compatible. Nightly 01424 was already validated in game.
+
 ## Release 1.1.0 — 6 October 2026
 
 The user reproduced physical-mouse stutter with the mod at 144 fps, but not at 60 or 120 fps, including with Flick Stick disabled and the controller disconnected. After removing unnecessary menu serialization from gameplay updates, the user confirmed that the stutter was fixed at 144 fps.

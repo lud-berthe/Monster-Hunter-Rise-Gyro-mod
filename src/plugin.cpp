@@ -24,13 +24,19 @@ static void on_lua_created(lua_State* l) {
     functions->unlock_lua();
 }
 extern "C" __declspec(dllexport) void reframework_plugin_required_version(REFrameworkPluginVersion* v) {
-    v->major=REFRAMEWORK_PLUGIN_VERSION_MAJOR;
-    v->minor=REFRAMEWORK_PLUGIN_VERSION_MINOR;
-    v->patch=REFRAMEWORK_PLUGIN_VERSION_PATCH;
+    // Minimum tested host API: Nexus Nightly939. The build header can be newer;
+    // its version is not the plugin's runtime requirement.
+    v->major=1;
+    v->minor=10;
+    v->patch=0;
     v->game_name="MHRISE";
 }
 extern "C" __declspec(dllexport) bool reframework_plugin_initialize(const REFrameworkPluginInitializeParam* p) {
-    if(!p || !p->functions) return false;
+    if(!p || !p->version || p->version->major!=1 || p->version->minor<10 || !p->functions) return false;
+    const auto* f=p->functions;
+    if(!f->on_message || !f->on_present || !f->on_device_reset ||
+       !f->on_lua_state_created || !f->lock_lua || !f->unlock_lua ||
+       !f->log_info || !f->log_error) return false;
     functions=p->functions;
     renderer=p->renderer_data;
     if(p->renderer_data && p->renderer_data->swapchain) {
