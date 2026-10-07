@@ -1,6 +1,6 @@
 # Validation and audit
 
-## Unreleased menu-input fix — 7 October 2026
+## Release 1.1.2 — 8 October 2026
 
 The Menu view now follows observed game UI state independently of permission to
 move the background camera. Options, dialogue and pause therefore retain their
@@ -8,13 +8,13 @@ Menu input policy, including when camera objects are temporarily unavailable.
 Unknown UI state does not invent an active menu view. Camera safety gates remain
 in effect.
 
-All **9/9 CTests** pass in a fresh Windows x64 Release build with the official
-Nightly939 SDK and the locally corrected GyroLib DLL. Binding/profile tests
+All **9/9 CTests** pass in the Windows x64 Release build with the official
+Nightly939 SDK and the release GyroLib 1.3.0 DLL. Binding/profile tests
 cover these transitions and blocked camera writes; the bridge, packaged Lua,
 plugin loading, input transport and hidden GUI suites also pass.
 
 The complete Steam mouse fix requires both this script change and GyroLib's
-unreleased change that keeps Block active while a known view cannot move its
+1.3.0 change that keeps Block active while a known view cannot move its
 camera. GyroLib also contains a general manual-calibration improvement for
 stationary noisy sensors. Neither change has yet been validated in Rise with
 the reporting user's original Switch Pro controllers. Test packages retain the
