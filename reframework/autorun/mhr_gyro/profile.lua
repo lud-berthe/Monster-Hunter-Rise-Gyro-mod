@@ -31,7 +31,7 @@ return {
     touchpad_suppression_verified=touchpad_native_output_disabled,
     contexts={
         view(1,"Free camera","Look around without aiming.",0,"normal_view"),
-        view(2,"Menu camera","Move the camera while a menu is open.",30,"menu_view",true),
+        view(2,"Menu camera","Camera and input settings while a menu is open.",30,"menu_view",true),
         view(3,"Wirebug aim","Aim the Wirebug.",20,"wire_view"),
         view(4,"Weapon aim","Aim with any weapon.",10,"weapon_view"),
         view(5,"Ballista","Aim the ballista.",25,"ballista_view"),

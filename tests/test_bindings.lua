@@ -59,6 +59,18 @@ state=binding:read_state();assert(state.active_view==2 and state.camera_in_menu 
 assert(binding:camera_ready(state))
 queries.isOpenPauseWindow=true;assert(not binding:camera_ready(binding:read_state()));queries.isOpenPauseWindow=false
 queries.isOpenDialog=true;assert(not binding:read_state().camera_allowed);queries.isOpenDialog=false
+-- Menu identity is independent of permission to move its background camera.
+for _,query in ipairs({'isOpenOptionWindow','isOpenTalkWindow','isOpenDialog','isOpenPauseWindow'}) do
+    queries[query]=true
+    state=binding:read_state()
+    assert(state.menu_view and state.active_view==2 and not binding:camera_ready(state))
+    queries[query]=false
+end
+local old_manager=objects['snow.CameraManager']
+objects['snow.CameraManager']=nil
+state=binding:read_state()
+assert(state.menu_state_observed and state.menu_view and state.active_view==2 and not state.camera_allowed)
+objects['snow.CameraManager']=old_manager
 queries.IsStartMenuAndSubmenuOpen=false
 camera_mode,rotation=1,2;queries.isDisplayedHunterWireAimUI=true
 state=binding:read_state();assert(state.active_view==3 and state.wire_view and not state.weapon_view)
@@ -108,6 +120,7 @@ queries.isOpenDialog=false
 queries.IsPlayerAllInputDisable="missing"
 state=binding:read_state()
 assert(not state.menu_state_observed and state.menu_open and not state.camera_allowed)
+assert(state.menu_view==nil and state.active_view==nil)
 assert(binding:apply_camera(5,3)==nil and #writes==2)
 queries.IsPlayerAllInputDisable=false;focused=false
 assert(binding:apply_camera(5,3)==nil and #writes==2)
@@ -156,6 +169,8 @@ assert(not controller.error and received_host.bindings_verified and received_hos
 assert(#writes==4 and math.abs(target.x-(before_pitch-2*math.pi/180))<1e-9)
 assert(math.abs(target.y-((before_yaw-math.pi/180+math.pi)%(2*math.pi)-math.pi))<1e-9)
 queries.isOpenDialog=true;controller:step();assert(#writes==4)
+assert(received_host.bindings_verified and not received_host.camera_allowed)
+assert(received_host.contexts[2].active and received_host.contexts[2].available)
 queries.isOpenDialog=false;overlay=true;controller:step();assert(#writes==4)
 overlay=false
 -- A menu can open between the first observation and the actual camera write.
@@ -169,5 +184,8 @@ controller:step();assert(#writes==6 and not controller.error)
 objects["snow.CameraManager"]=nil
 assert(not binding:read_state().camera_allowed)
 controller:step();assert(#writes==6 and not controller.error)
+queries.isOpenDialog=true;controller:step()
+assert(#writes==6 and not received_host.camera_allowed)
+assert(received_host.contexts[2].active and received_host.contexts[2].available)
 sdk,mhr_gyro_native,reframework,re=saved_sdk,saved_native,saved_reframework,saved_re
 print("MHR camera binding/profile: radians, normal view, engine callback and menu/focus/overlay gates passed")

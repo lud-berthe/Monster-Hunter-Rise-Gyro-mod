@@ -1,5 +1,37 @@
 # Validation and audit
 
+## Unreleased menu-input fix — 7 October 2026
+
+The Menu view now follows observed game UI state independently of permission to
+move the background camera. Options, dialogue and pause therefore retain their
+Menu input policy, including when camera objects are temporarily unavailable.
+Unknown UI state does not invent an active menu view. Camera safety gates remain
+in effect.
+
+All **9/9 CTests** pass in a fresh Windows x64 Release build with the official
+Nightly939 SDK and the locally corrected GyroLib DLL. Binding/profile tests
+cover these transitions and blocked camera writes; the bridge, packaged Lua,
+plugin loading, input transport and hidden GUI suites also pass.
+
+The complete Steam mouse fix requires both this script change and GyroLib's
+unreleased change that keeps Block active while a known view cannot move its
+camera. GyroLib also contains a general manual-calibration improvement for
+stationary noisy sensors. Neither change has yet been validated in Rise with
+the reporting user's original Switch Pro controllers. Test packages retain the
+three-file mod layout; the GyroLib runtime is supplied separately and no player
+settings are bundled.
+
+The nine tests also pass with the subsequent GyroLib manual-calibration memory
+change: completed per-sensor bias/noise restoration and automatic residual
+refinement are handled by the library. No new mod hook or setting is required.
+
+On 8 October, all nine tests pass with the further GyroLib cursor suppression
+fix. The library now intercepts identified Steam mouse movement before it changes
+the Windows cursor, while preserving raw counts for conversion. This requires no
+additional mod filtering. The Menu-view observation change above is still needed
+to report the correct policy while the game camera is locked. Live confirmation
+of this combination remains pending.
+
 ## Release 1.1.1 — 6 October 2026
 
 A user log showed that Nexus Nightly939 (`654bac566ad2cb645a5ddbf72d0008e8698187b8`, plugin API 1.10.0) rejected the plugin before initialization. The plugin had advertised the compilation header's API 1.15.0 even though it uses only callbacks and renderer fields present in 1.10.0. The runtime requirement is now explicitly 1.10.0, independently of the build SDK version. Required function pointers are checked before registration.

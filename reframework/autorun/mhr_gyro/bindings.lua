@@ -34,7 +34,24 @@ function Bindings:read_state()
     state.objects.manager=manager~=nil
     state.objects.gui=gui~=nil
     state.objects.players=players~=nil
-    if not manager or not gui or not players then return state end
+    if not gui then return state end
+    local queries={}
+    state.gui_queries=queries
+    local menus_known=true
+    for _,method in ipairs(gui_queries) do
+        queries[method]=boolean(errors,method,function() return gui:call(method) end)
+        if type(queries[method])~="boolean" then menus_known=false end
+    end
+    if not menus_known then return state end
+    state.menu_state_observed=true
+    state.menu_open=false
+    for _,method in ipairs(gui_queries) do state.menu_open=state.menu_open or queries[method] end
+    state.paused=queries.isOpenPauseWindow or queries.get_IsStartManuPause
+    -- The menu profile also owns input policy when its camera is unavailable.
+    -- Only observed UI state selects it; unknown states retain no active view.
+    state.menu_view=state.menu_open
+    state.active_view=state.menu_view and 2 or 0
+    if next(errors) or not manager or not players then return state end
     local camera=read(errors,"camera",function() return manager:get_field("_RefPlayerCameraBehavior") end)
     local input=read(errors,"input",function() return manager:get_field("_RefCameraInput") end)
     local game_camera=read(errors,"game_camera",function() return manager:get_field("<_RefGameCameraBehavior>k__BackingField") end)
@@ -43,17 +60,7 @@ function Bindings:read_state()
     state.objects.input=input~=nil
     state.objects.game_camera=game_camera~=nil
     state.objects.player=player~=nil
-    local queries={}
-    state.gui_queries=queries
-    for _,method in ipairs(gui_queries) do
-        queries[method]=boolean(errors,method,function() return gui:call(method) end)
-    end
-    if next(errors) then return state end
-    state.menu_state_observed=true
-    state.menu_open=false
-    for _,method in ipairs(gui_queries) do state.menu_open=state.menu_open or queries[method] end
-    state.paused=queries.isOpenPauseWindow or queries.get_IsStartManuPause
-    if not camera or not input or not game_camera or not player then return state end
+    if next(errors) or not camera or not input or not game_camera or not player then return state end
     local kind=read(errors,"camera type",function() return manager:get_field("_NowCameraType") end)
     local mode=read(errors,"camera mode",function() return input:get_field("_CameraMode") end)
     local rotation=read(errors,"rotation type",function() return camera:get_field("_RotationType") end)
@@ -91,7 +98,6 @@ function Bindings:read_state()
     local ui_blocks=queries.isOpenOptionWindow or queries.isOpenTalkWindow or queries.isOpenDialog
     local eligible=supported and not blocked
     state.normal_view=eligible and free and not state.menu_open
-    state.menu_view=eligible and state.menu_open and not ui_blocks
     state.wire_view=eligible and aiming and wire and not state.menu_open
     state.weapon_view=eligible and aiming and not wire and not state.menu_open
     state.ballista_view=eligible and ballista and not state.menu_open
